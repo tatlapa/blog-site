@@ -10,7 +10,6 @@ export default defineNuxtConfig({
   modules: ["shadcn-nuxt", "@pinia/nuxt", "pinia-plugin-persistedstate/nuxt"],
   piniaPluginPersistedstate: {
     storage: "localStorage",
-    key: "auth-store" as `${string}%id${string}`,
   },
   shadcn: {
     /**

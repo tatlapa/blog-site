@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import { toast } from "vue-sonner";
 import type {
   LoginForm,
   RegisterForm,
@@ -6,8 +7,6 @@ import type {
   User,
   ApiResponseUser,
   ApiError,
-  UpdatePasswordForm,
-  UpdateProfileForm,
 } from "@/types/authTypes";
 
 // @ts-ignore
@@ -35,13 +34,13 @@ export const useAuthStore = defineStore("auth-store", {
         });
         this.token = response.access_token;
         this.user = response.user;
+        toast.success("Inscription réussie !");
         return true;
       } catch (error: any) {
-        const apiError = error as ApiError;
-        if (apiError.status === 422 && apiError.data) {
-          this.formErrors = apiError.data.errors as FormErrors;
+        if (error.status === 422) {
+          this.formErrors = error.data.errors as FormErrors;
         } else {
-          this.formErrors = { global: apiError.message } as FormErrors;
+          this.formErrors = { global: error.message } as FormErrors;
         }
         throw error;
       } finally {
@@ -59,16 +58,17 @@ export const useAuthStore = defineStore("auth-store", {
           method: "POST",
           body: form,
         });
-        console.log(response);
         this.token = response.access_token;
         this.user = response.user;
+        toast.success("Connexion réussie !");
         return true;
       } catch (error: any) {
-        const apiError = error as ApiError;
-        if (apiError.status === 422 && apiError.data && apiError.data.errors) {
-          this.formErrors = apiError.data.errors as FormErrors;
-        } else {
-          this.formErrors = { global: apiError.message } as FormErrors;
+        if (error.status === 400) {
+          this.formErrors = error.data.errors as FormErrors;
+        } else if (error.status === 401) {
+          this.formErrors = error.data.message as FormErrors;
+        } else if (error.status === 500) {
+          this.formErrors = error.data.message as FormErrors;
         }
         throw error;
       } finally {
@@ -86,83 +86,13 @@ export const useAuthStore = defineStore("auth-store", {
         this.user = null;
         localStorage.clear();
         navigateTo("/");
+        toast.success("Déconnexion réussie !");
       } catch (error) {
         console.error("Logout failed", error);
       }
     },
-    async refreshUser() {
-      const { $api } = useNuxtApp();
-
-      try {
-        const response = await $api<User>("/user", {
-          method: "GET",
-        });
-
-        if (response) {
-          this.user = response;
-        }
-      } catch (error: any) {
-        console.error("Failed to refresh user", error);
-      }
-    },
-    async updateProfile(form: UpdateProfileForm) {
-      const { $api } = useNuxtApp();
-
-      this.formErrors = {} as FormErrors;
-      this.formLoading = true;
-
-      try {
-        const response = await $api<User>("/user", {
-          method: "POST",
-          body: form,
-        });
-
-        if (response) {
-          this.user = response;
-          return true;
-        }
-        return false;
-      } catch (error: any) {
-        const apiError = error as ApiError;
-        if (apiError.status === 422 && apiError.data && apiError.data.errors) {
-          this.formErrors = apiError.data.errors as FormErrors;
-        } else {
-          this.formErrors = { global: apiError.message } as FormErrors;
-        }
-        throw error;
-      } finally {
-        this.formLoading = false;
-      }
-    },
-    async updatePassword(form: UpdatePasswordForm) {
-      const { $api } = useNuxtApp();
-
-      this.formErrors = {} as FormErrors;
-      this.formLoading = true;
-
-      try {
-        const response = await $api("/user/password", {
-          method: "POST",
-          body: form,
-        });
-
-        if (response) {
-          this.user = response as User;
-          return true;
-        }
-        return false;
-      } catch (error: any) {
-        const apiError = error as ApiError;
-        if (apiError.status === 422 && apiError.data && apiError.data.errors) {
-          this.formErrors = apiError.data.errors as FormErrors;
-        } else {
-          this.formErrors = { global: apiError.message } as FormErrors;
-        }
-        throw error;
-      } finally {
-        this.formLoading = false;
-      }
-    },
   },
-  persist: true,
+  persist: {
+    key: "auth-store",
+  },
 });

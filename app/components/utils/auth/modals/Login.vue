@@ -3,17 +3,8 @@ import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
 import * as z from "zod";
 import { useAuthStore } from "~/stores/auth";
-import { Button } from "@/components/ui/button";
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 
-const authStore = useAuthStore();
+const authStore = useAuthStore() as any;
 
 const formSchema = toTypedSchema(
   z.object({
@@ -22,27 +13,25 @@ const formSchema = toTypedSchema(
   })
 );
 
-const { handleSubmit, isFieldDirty } = useForm({
+const emit = defineEmits<{ (e: "login-success"): void; (e: "close"): void }>();
+
+const { handleSubmit } = useForm({
   validationSchema: formSchema,
 });
 
 const onSubmit = handleSubmit(async (values) => {
   try {
     await authStore.login(values);
-    // gestion du succès (emit, etc.)
+    emit("login-success");
   } catch (error) {
-    // gestion de l'erreur dans le store
+    // L'erreur est déjà gérée par le store
   }
 });
 </script>
 
 <template>
-  <Form class="space-y-4" @submit="onSubmit">
-    <FormField
-      v-slot="{ componentField }"
-      name="email"
-      :validate-on-blur="!isFieldDirty"
-    >
+  <form class="space-y-4" @submit="onSubmit">
+    <FormField v-slot="{ componentField }" name="email">
       <FormItem>
         <FormLabel>Email</FormLabel>
         <FormControl>
@@ -55,11 +44,7 @@ const onSubmit = handleSubmit(async (values) => {
         <FormMessage />
       </FormItem>
     </FormField>
-    <FormField
-      v-slot="{ componentField }"
-      name="password"
-      :validate-on-blur="!isFieldDirty"
-    >
+    <FormField v-slot="{ componentField }" name="password">
       <FormItem>
         <FormLabel>Mot de passe</FormLabel>
         <FormControl>
@@ -73,15 +58,15 @@ const onSubmit = handleSubmit(async (values) => {
       </FormItem>
     </FormField>
     <div
-      v-if="authStore.formErrors.global"
+      v-if="authStore.formErrors"
       class="p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm"
     >
-      {{ authStore.formErrors.global[0] }}
+      {{ authStore.formErrors }}
     </div>
     <DialogFooter>
       <Button type="submit" :disabled="authStore.formLoading">
         {{ authStore.formLoading ? "Connexion..." : "Se connecter" }}
       </Button>
     </DialogFooter>
-  </Form>
+  </form>
 </template>

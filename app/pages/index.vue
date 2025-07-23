@@ -1,17 +1,25 @@
 <script setup lang="ts">
-const articlesStore = useArticlesStore();
+import { ref } from "vue";
+import type { Article } from "~/types/articleTypes";
+
+const articlesStore = useArticlesStore() as any;
+const selectedArticle = ref<Article | null>(null);
 
 onMounted(async () => {
   await articlesStore.fetchArticles();
 });
 
-const formatDate = (date: string) => {
+const formatDate = (date: string | Date) => {
   const d = new Date(date);
   return new Intl.DateTimeFormat("fr-FR", {
     year: "numeric",
     month: "long",
     day: "numeric",
   }).format(d);
+};
+
+const openViewDialog = (article: Article) => {
+  selectedArticle.value = article;
 };
 </script>
 
@@ -67,6 +75,27 @@ const formatDate = (date: string) => {
         </CardHeader>
         <CardContent>
           <p class="text-gray-600 line-clamp-3">{{ article.excerpt }}</p>
+          <div class="mt-4">
+            <Dialog>
+              <DialogTrigger>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  @click="openViewDialog(article)"
+                >
+                  Lire l'article
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{{ selectedArticle?.title }}</DialogTitle>
+                  <DialogDescription class="break-words max-w-[480px]">
+                    {{ selectedArticle?.content }}
+                  </DialogDescription>
+                </DialogHeader>
+              </DialogContent>
+            </Dialog>
+          </div>
         </CardContent>
       </Card>
     </div>

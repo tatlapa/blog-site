@@ -5,16 +5,22 @@ import Login from "./modals/Login.vue";
 import Register from "./modals/Register.vue";
 
 const props = defineProps<{ open: boolean }>();
-const emit = defineEmits<{ (e: "close"): void; (e: "login-success"): void }>();
+const emit = defineEmits<{
+  (e: "close"): void;
+  (e: "login-success"): void;
+  (e: "register-success"): void;
+}>();
 
+const authStore = useAuthStore() as any;
+const isRegister = ref(false);
+
+// Nettoyer les erreurs quand la modale s'ouvre
 watch(
   () => props.open,
-  (val) => {
-    console.log("Auth.vue: prop open changed", val);
+  () => {
+    authStore.formErrors = null;
   }
 );
-
-const isRegister = ref(false);
 
 const handleSwitch = () => {
   isRegister.value = !isRegister.value;
@@ -22,6 +28,12 @@ const handleSwitch = () => {
 
 const handleLoginSuccess = () => {
   emit("login-success");
+  emit("close");
+};
+
+const handleRegisterSuccess = () => {
+  emit("register-success");
+  emit("close");
 };
 
 const handleOpenChange = (value: boolean) => {
@@ -45,20 +57,19 @@ const handleOpenChange = (value: boolean) => {
         </DialogDescription>
       </DialogHeader>
       <Login v-if="!isRegister" @login-success="handleLoginSuccess" />
-      <Register v-else />
-      <div class="text-center mt-4">
-        <button
-          class="text-sm text-primary underline hover:opacity-80"
-          type="button"
-          @click="handleSwitch"
-        >
-          {{
-            isRegister
-              ? "Déjà un compte ? Se connecter"
-              : "Pas encore de compte ? Créer un compte"
-          }}
-        </button>
-      </div>
+      <Register v-else @register-success="handleRegisterSuccess" />
+      <Button
+        variant="link"
+        type="button"
+        @click="handleSwitch"
+        class="justify-end m-0 p-0"
+      >
+        {{
+          isRegister
+            ? "Déjà un compte ? Se connecter"
+            : "Pas encore de compte ? Créer un compte"
+        }}
+      </Button>
     </DialogContent>
   </Dialog>
 </template>

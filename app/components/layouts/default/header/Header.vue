@@ -2,16 +2,8 @@
 import { useAuthStore } from "~/stores/auth";
 import Auth from "~/components/utils/auth/Auth.vue";
 
-// Utilisation du store d'authentification
-const authStore = useAuthStore();
-
-// État local pour la modal
+const authStore = useAuthStore() as any;
 const showLoginModal = ref(false);
-
-// Fonction pour gérer la connexion réussie
-const handleLoginSuccess = () => {
-  console.log("Connexion réussie");
-};
 </script>
 
 <template>
@@ -68,10 +60,9 @@ const handleLoginSuccess = () => {
       </div>
     </div>
   </header>
-  <!-- Nouvelle modale d'authentification -->
+  <!-- Modale d'authentification -->
   <Auth
     :open="showLoginModal"
     @close="showLoginModal = false"
-    @login-success="handleLoginSuccess"
   />
 </template>

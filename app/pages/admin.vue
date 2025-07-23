@@ -5,9 +5,10 @@ import { useAuthStore } from "@/stores/auth";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useForm } from "vee-validate";
 import * as z from "zod";
+import type { Article } from "~/types/articleTypes";
 
-const articlesStore = useArticlesStore();
-const authStore = useAuthStore();
+const articlesStore = useArticlesStore() as any;
+const authStore = useAuthStore() as any;
 const router = useRouter();
 const editArticleId = ref<string | null>(null);
 
@@ -31,9 +32,13 @@ const form = useForm({
 });
 
 // Quand on ouvre la modale d'édition, on pré-remplit le form
-const openEditDialog = (article) => {
-  console.log(article.id);
+const openEditDialog = (article: Article) => {
   editArticleId.value = article.id;
+  form.setValues({
+    title: article.title,
+    excerpt: article.excerpt,
+    content: article.content,
+  });
 };
 
 const handleDelete = async (id: number) => {
@@ -233,7 +238,7 @@ const submitUpdateArticle = form.handleSubmit(async (values) => {
                         <FormMessage />
                       </FormItem>
                     </FormField>
-                    <DialogFooter class="flex space-x-2">
+                    <DialogFooter class="mt-4">
                       <Button
                         type="submit"
                         class="flex-1"
@@ -245,17 +250,13 @@ const submitUpdateArticle = form.handleSubmit(async (values) => {
                             : "Enregistrer"
                         }}
                       </Button>
-                      <DialogClose as-child>
-                        <Button type="button" variant="outline">Annuler</Button>
-                      </DialogClose>
                     </DialogFooter>
                   </form>
                 </DialogContent>
               </Dialog>
               <Button
-                variant="outline"
+                variant="destructive"
                 size="sm"
-                class="text-red-600 hover:text-red-700"
                 :disabled="articlesStore.formLoading"
                 @click="handleDelete(article.id)"
               >
@@ -265,7 +266,8 @@ const submitUpdateArticle = form.handleSubmit(async (values) => {
           </div>
         </CardHeader>
         <CardContent>
-          <p class="text-gray-600">{{ article.excerpt }}</p>
+          <p>Extrait : {{ article.excerpt }}</p>
+          <p>Contenu : {{ article.content }}</p>
         </CardContent>
       </Card>
     </div>
